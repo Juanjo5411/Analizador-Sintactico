@@ -204,6 +204,7 @@ class Parser:
         self.stack = ['$']
         self.stack.append(self.grammar.start_symbol)
         self.error_reported = False
+        self.current_rule = None  # Almacena la regla en evaluación
 
     def advance(self):
         """Avanza al siguiente token."""
@@ -226,9 +227,12 @@ class Parser:
                 if top == token_name or top == lexeme:
                     self.advance()
                 else:
-                    self.report_syntax_error([top])
+                    self.report_syntax_error([top], current_rule=self.current_rule)
                     break
             elif top in self.grammar.non_terminals:
+                # Actualizar la regla en evaluación
+                self.current_rule = top
+
                 # Utiliza la tabla de parsing para decidir la producción
                 key = (top, token_name)
                 if key not in self.grammar.parse_table:
@@ -240,10 +244,10 @@ class Parser:
                 else:
                     # Si no se puede decidir, reportar error
                     expected = self.expected_tokens(top)
-                    self.report_syntax_error(expected)
+                    self.report_syntax_error(expected, current_rule=self.current_rule)
                     break
             else:
-                self.report_syntax_error([top])
+                self.report_syntax_error([top], current_rule=self.current_rule)
                 break
 
         if not self.error_reported:
@@ -257,14 +261,15 @@ class Parser:
                 expected.append(terminal)
         return expected
 
-    def report_syntax_error(self, expected_tokens):
-        """Reporte de error sintáctico."""
+    def report_syntax_error(self, expected_tokens, current_rule):
+        """Reporte de error sintáctico incluyendo la regla en evaluación."""
         if not self.error_reported:
             line = self.current_token[2]
             column = self.current_token[3]
             found_lexeme = self.current_token[1]
             expected = ', '.join(f'"{et}"' for et in expected_tokens)
-            error_message = f"<{line},{column}> Error sintáctico: se encontró \"{found_lexeme}\"; se esperaba: {expected}."
+            error_message = (f"<{line},{column}> Error sintáctico en la regla '{current_rule}': "
+                             f"se encontró \"{found_lexeme}\"; se esperaba: {expected}.")
             print(error_message)
             self.error_reported = True
 
@@ -305,3 +310,4 @@ class Parser:
         except FileNotFoundError:
             print(f"Error: El archivo '{filename}' no se encontró.")
             sys.exit(1)
+

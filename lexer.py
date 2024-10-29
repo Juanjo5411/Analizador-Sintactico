@@ -111,14 +111,14 @@ class Lexer:
         # Manejar dedentaciones al final del archivo
         while len(self.indent_stack) > 1:
             self.indent_stack.pop()
-            self.tokens.append(('DEDENT', self.line, self.column))
+            self.tokens.append(('tk_dedent', self.line, self.column))
 
         # Escribir los tokens generados en el archivo de salida
         self.write_output()
         return self.tokens
 
     def handle_indentation(self):
-        """Maneja la sangría con tabulaciones y espacios, generando tokens INDENT y DEDENT con reglas de sangría."""
+        """Maneja la sangría con tabulaciones y espacios, generando tokens tk_indent y tk_dedent."""
         current_indent = 0
         pos = self.position
         spaces = 0
@@ -150,15 +150,15 @@ class Lexer:
         previous_indent = self.indent_stack[-1]
 
         if current_indent > previous_indent:
-            # Aumentar la sangría: agregar `INDENT` y actualizar la pila
+            # Aumentar la sangría: agregar `tk_indent` y actualizar la pila
             self.indent_stack.append(current_indent)
-            self.tokens.append(('INDENT', self.line, self.column))
+            self.tokens.append(('tk_indent', self.line, self.column))
 
         elif current_indent < previous_indent:
-            # Disminuir la sangría: generar `DEDENT` hasta alcanzar el nivel actual
+            # Disminuir la sangría: generar `tk_dedent` hasta alcanzar el nivel actual
             while len(self.indent_stack) > 1 and self.indent_stack[-1] > current_indent:
                 self.indent_stack.pop()
-                self.tokens.append(('DEDENT', self.line, self.column))
+                self.tokens.append(('tk_dedent', self.line, self.column))
 
     def report_error(self, message="Error léxico"):
         """Almacena un mensaje de error léxico sin escribirlo inmediatamente."""

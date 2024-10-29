@@ -66,6 +66,13 @@ class Lexer:
                 self.tokenize_comment()
                 continue
 
+            # Procesar comentarios multilínea
+            if char in {'"', "'"}:
+                next_char = self.peek(1)  # Verificar el siguiente carácter
+                if next_char == char:  # Detección de comentario multilínea
+                    self.tokenize_multiline_comment()
+                    continue
+
             # Procesar cadenas de texto
             if char in {'"', "'"}:
                 self.tokenize_string()
@@ -94,6 +101,7 @@ class Lexer:
             # Si no coincide con nada, es un error léxico
             self.report_error()
             break  # Detenerse inmediatamente después de reportar el error
+
 
         # Inserta un tk_newline si el último token no es un tk_newline
         if self.tokens and self.tokens[-1][0] != 'tk_newline':
@@ -276,11 +284,26 @@ class Lexer:
                 self.advance()
                 self.column += 1
 
-    def tokenize_comment(self):
-        """Tokeniza comentarios de una línea."""
+    def tokenize_multiline_comment(self):
+        """Tokeniza comentarios multilínea delimitados por ''' o \"\"\"."""
+        start_pos = self.position
+        start_column = self.column
+        quote_char = self.peek()
+        self.advance()  # Avanza para omitir la primera comilla
+
         while True:
             char = self.peek()
-            if char is None or char == '\n':
-                break
-            self.advance()
+            if char is None:
+                break  # Fin del archivo
+            if char == quote_char:
+                # Avanza y verifica el siguiente carácter para ver si es un cierre
+                self.advance()
+                if self.peek() == quote_char:
+                    self.advance()  # Avanza para omitir la segunda comilla
+                    break  # Comentario cerrado
+            if char == '\n':
+                self.line += 1
+                self.column = 0
+            else:
+                self.advance()  # Continua avanzando en el comentario
         # Comentario ignorado; no se agrega token

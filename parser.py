@@ -22,24 +22,58 @@ class Grammar:
         """Lee la gramática desde un archivo y la almacena en estructuras de datos."""
         try:
             with open(filename, 'r') as f:
+                current_lhs = None   # Almacena el LHS de la producción en curso
+                current_rhs = []     # Almacena las producciones RHS acumuladas
+                accumulating = False # Indica si se están acumulando líneas para una producción
+
                 for line in f:
-                    line = line.strip()
-                    if not line or line.startswith('#'):
-                        continue  # Ignorar líneas vacías o comentarios
-                    if '->' not in line:
-                        print(f"Error: Línea inválida en la gramática: {line}")
-                        sys.exit(1)
-                    lhs, rhs = line.split('->')
-                    lhs = lhs.strip()
-                    rhs = rhs.strip()
-                    if lhs not in self.non_terminals:
-                        self.non_terminals.append(lhs)
-                    if self.start_symbol is None:
-                        self.start_symbol = lhs  # El primer símbolo no terminal es el símbolo inicial
-                    productions = [prod.strip().split() for prod in rhs.split('|')]
-                    if lhs not in self.rules:
-                        self.rules[lhs] = []
-                    self.rules[lhs].extend(productions)
+                    # Eliminar espacios en blanco y comentarios
+                    line = line.split('#', 1)[0].strip()
+                    
+                    if not line:
+                        continue  # Ignorar líneas vacías
+                    
+                    # Detectar si se inicia una nueva regla
+                    if '->' in line:
+                        # Si se está acumulando una producción previa, guardarla
+                        if accumulating and current_lhs:
+                            if current_lhs not in self.rules:
+                                self.rules[current_lhs] = []
+                            # Filtrar producciones vacías
+                            self.rules[current_lhs].extend([prod for prod in current_rhs if prod])
+                            current_rhs = []
+                            accumulating = False
+
+                        # Dividir la línea en LHS y RHS
+                        lhs, rhs = line.split('->')
+                        lhs = lhs.strip()
+                        rhs = rhs.strip()
+                        
+                        # Agregar LHS al conjunto de no terminales y actualizar el símbolo inicial
+                        if lhs not in self.non_terminals:
+                            self.non_terminals.append(lhs)
+                        if self.start_symbol is None:
+                            self.start_symbol = lhs
+                        current_lhs = lhs  # Actualizar LHS en curso
+
+                        # Agregar producciones al RHS inicial
+                        current_rhs.extend([prod.strip().split() for prod in rhs.split('|')])
+                        accumulating = True
+
+                    else:
+                        # Continuar acumulando el RHS de la producción anterior
+                        if accumulating:
+                            current_rhs.extend([prod.strip().split() for prod in line.split('|')])
+
+                # Guardar la última regla acumulada al finalizar el archivo
+                if accumulating and current_lhs:
+                    if current_lhs not in self.rules:
+                        self.rules[current_lhs] = []
+                    # Filtrar producciones vacías
+                    self.rules[current_lhs].extend([prod for prod in current_rhs if prod])
+                
+                # Identificar terminales y no terminales
+                for lhs, productions in self.rules.items():
                     for prod in productions:
                         for symbol in prod:
                             if symbol.isupper():
@@ -48,10 +82,14 @@ class Grammar:
                                 continue  # Epsilon
                             else:
                                 self.terminals.add(symbol)
-            self.terminals.add('$')  # Añadir el símbolo de fin de entrada
+                
+                self.terminals.add('$')  # Añadir el símbolo de fin de entrada
+
         except FileNotFoundError:
             print(f"Error: El archivo de gramática '{filename}' no se encontró.")
             sys.exit(1)
+
+
 
     def compute_first_sets(self):
         """Calcula los conjuntos PRIMERO para cada no terminal."""

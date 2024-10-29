@@ -112,6 +112,8 @@ class Lexer:
         """Maneja los cambios en la indentación y genera tokens tk_indent y tk_dedent."""
         current_indent = 0
         pos = self.position
+        
+        # Contar espacios y tabulaciones al inicio de la línea
         while pos < len(self.code) and self.code[pos] in (' ', '\t'):
             if self.code[pos] == ' ':
                 current_indent += 1
@@ -119,21 +121,28 @@ class Lexer:
                 current_indent += 4  # Asumiendo tabulación de 4 espacios
             pos += 1
 
-        previous_indent = self.indent_stack[-1]
-        if current_indent > previous_indent:
-            self.indent_stack.append(current_indent)
-            self.tokens.append(('tk_indent', self.line, self.column))
-        elif current_indent < previous_indent:
-            while len(self.indent_stack) > 0 and current_indent < self.indent_stack[-1]:
+        # Convertir a niveles de indentación en múltiplos de 4
+        current_level = current_indent // 4
+
+        # Obtener el nivel de indentación anterior desde la pila
+        previous_level = self.indent_stack[-1]
+
+        if current_level > previous_level:
+            # Aumentar la indentación: agregar `tk_indent` tokens para cada nivel adicional
+            for _ in range(current_level - previous_level):
+                self.indent_stack.append(previous_level + 1)
+                self.tokens.append(('tk_indent', self.line, self.column))
+
+        elif current_level < previous_level:
+            # Disminuir la indentación: agregar `tk_dedent` tokens hasta alcanzar el nivel actual
+            while self.indent_stack and current_level < self.indent_stack[-1] // 4:
                 self.indent_stack.pop()
                 self.tokens.append(('tk_dedent', self.line, self.column))
-            # Insertar tk_newline después de tk_dedent
-            if not (self.tokens and self.tokens[-1][0] == 'tk_newline'):
-                self.tokens.append(('tk_newline', self.line, self.column))
-        # Si la indentación es igual, no hacemos nada
 
+        # Actualizar la posición después de manejar la indentación
         self.position = pos
         self.column = current_indent + 1
+
 
     def report_error(self, message="Error léxico"):
         """Almacena un mensaje de error léxico sin escribirlo inmediatamente."""

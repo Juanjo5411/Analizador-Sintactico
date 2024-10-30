@@ -1,19 +1,65 @@
 PROGRAM -> STATEMENT_LIST
+
+# Lista de declaraciones principales
 STATEMENT_LIST -> STATEMENT STATEMENT_LIST_PRIME
 STATEMENT_LIST_PRIME -> NEWLINE STATEMENT_LIST | ε
+
+# Nueva línea
 NEWLINE -> tk_newline
-STATEMENT -> ASSIGNMENT_STMT | PRINT_STMT | ε
+
+# Declaraciones
+STATEMENT -> ASSIGNMENT_STMT | PRINT_STMT | FUNCTION_DEF | PASS_STMT | FOR_STMT | WHILE_STMT | ε
+
+# Declaración de asignación
 ASSIGNMENT_STMT -> id ASSIGNMENT_OP EXPRESSION
+
+# Declaración de impresión
 PRINT_STMT -> print tk_par_izq EXPRESSION tk_par_der
-EXPRESSION -> TERM EXPRESSION_PRIME 
+
+# Declaración de paso
+PASS_STMT -> pass
+RETURN_STMT -> return EXPRESSION NEWLINE | ε
+LOOP_END -> BREAK_STMT | CONTINUE_STMT | ε
+BREAK_STMT -> break NEWLINE
+CONTINUE_STMT -> continue NEWLINE
+
+# Definición de función
+FUNCTION_DEF -> def id tk_par_izq PARAMETERS tk_par_der tk_dos_puntos NEWLINE BLOCK_DEF
+
+# Declaracion de bucles
+FOR_STMT -> for id in RANGE_EXPR tk_dos_puntos NEWLINE BLOCK_LOOP
+WHILE_STMT -> while EXPRESSION tk_dos_puntos NEWLINE BLOCK_LOOP
+
+# Expresión de rango
+RANGE_EXPR -> range tk_par_izq EXPRESSION tk_par_der
+
+# Lista de parámetros para funciones
+PARAMETERS -> PARAMETER PARAMETER_LIST | ε
+PARAMETER -> id | tk_string
+PARAMETER_LIST -> tk_coma PARAMETER PARAMETER_LIST | ε
+
+# Bloques de código para funciones que permiten `return` al final
+BLOCK_DEF -> tk_indent STATEMENT_LIST RETURN_STMT tk_dedent
+BLOCK_LOOP -> tk_indent STATEMENT_LIST LOOP_END tk_dedent
+
+# Expresiones y operadores
+EXPRESSION -> TERM EXPRESSION_PRIME
 EXPRESSION_PRIME -> ADD_OP TERM EXPRESSION_PRIME | ε
+
+# Operadores de términos
 TERM -> FACTOR TERM_PRIME
 TERM_PRIME -> MUL_OP FACTOR TERM_PRIME | ε
-FACTOR -> id | tk_par_izq EXPRESSION tk_par_der | LITERAL
+
+# Factores y literales
+FACTOR -> id | tk_par_izq EXPRESSION tk_par_der | LITERAL | RANGE_EXPR
 LITERAL -> tk_entero | tk_string | True | False | None
+
+# Operadores aritméticos y lógicos
 ADD_OP -> tk_suma | tk_resta | tk_or | tk_xor_bit | tk_shift_izq | tk_shift_der
 MUL_OP -> tk_multiplicacion | tk_division | tk_modulo | tk_floor_div | tk_exponente | tk_and_bit
 REL_OP -> tk_igual | tk_distinto | tk_menor | tk_mayor | tk_menor_igual | tk_mayor_igual
+
+# Operadores de asignación
 ASSIGNMENT_OP -> tk_asig | tk_suma_asig | tk_resta_asig | tk_mult_asig | tk_div_asig 
                | tk_mod_asig | tk_and_asig | tk_or_asig | tk_xor_asig | tk_izq_asig 
                | tk_der_asig | tk_exp_asig | tk_floor_div_asig | tk_morsa

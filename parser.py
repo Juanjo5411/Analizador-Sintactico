@@ -22,9 +22,9 @@ class Grammar:
         """Lee la gramática desde un archivo y la almacena en estructuras de datos."""
         try:
             with open(filename, 'r') as f:
-                current_lhs = None   # Almacena el LHS de la producción en curso
-                current_rhs = []     # Almacena las producciones RHS acumuladas
-                accumulating = False # Indica si se están acumulando líneas para una producción
+                current_lhs = None
+                current_rhs = []
+                accumulating = False
 
                 for line in f:
                     # Eliminar espacios en blanco y comentarios
@@ -44,8 +44,8 @@ class Grammar:
                             current_rhs = []
                             accumulating = False
 
-                        # Dividir la línea en LHS y RHS
-                        lhs, rhs = line.split('->')
+                        # Dividir la línea en LHS y RHS usando split con máximo una división
+                        lhs, rhs = line.split('->', 1)
                         lhs = lhs.strip()
                         rhs = rhs.strip()
                         
@@ -88,6 +88,7 @@ class Grammar:
         except FileNotFoundError:
             print(f"Error: El archivo de gramática '{filename}' no se encontró.")
             sys.exit(1)
+
 
 
 

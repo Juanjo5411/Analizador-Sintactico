@@ -1,65 +1,69 @@
+# Estructura basica del programa
 PROGRAM -> STATEMENT_LIST
-
-# Lista de declaraciones principales
 STATEMENT_LIST -> STATEMENT STATEMENT_LIST_PRIME
 STATEMENT_LIST_PRIME -> NEWLINE STATEMENT_LIST | ε
-
-# Nueva línea
 NEWLINE -> tk_newline
+INDENT_STMT -> tk_indent
+DEDENT_STMT -> tk_dedent
+#------------------------------------------------------------------------------------------------------------------
 
-# Declaraciones
-STATEMENT -> ASSIGNMENT_STMT | PRINT_STMT | FUNCTION_DEF | PASS_STMT | FOR_STMT | WHILE_STMT | ε
-
-# Declaración de asignación
+# Declaraciones, asignaciones y print
+STATEMENT -> ASSIGNMENT_STMT | PRINT_STMT | FUNCTION_DEF | PASS_STMT | FOR_STMT | WHILE_STMT | IF_STMT | RETURN_STMT | LOOP_END | ε
 ASSIGNMENT_STMT -> id ASSIGNMENT_OP EXPRESSION
-
-# Declaración de impresión
 PRINT_STMT -> print tk_par_izq EXPRESSION tk_par_der
 
-# Declaración de paso
+#------------------------------------------------------------------------------------------------------------------
+# Palabras reservadas de flujo de control
 PASS_STMT -> pass
-RETURN_STMT -> return EXPRESSION NEWLINE | ε
-LOOP_END -> BREAK_STMT | CONTINUE_STMT | ε
+RETURN_STMT -> return EXPRESSION NEWLINE
+LOOP_END -> BREAK_STMT | CONTINUE_STMT
 BREAK_STMT -> break NEWLINE
 CONTINUE_STMT -> continue NEWLINE
 
-# Definición de función
-FUNCTION_DEF -> def id tk_par_izq PARAMETERS tk_par_der tk_dos_puntos NEWLINE BLOCK_DEF
+#------------------------------------------------------------------------------------------------------------------
+
+# Funciones
+FUNCTION_DEF -> def id tk_par_izq ELEMENTS tk_par_der tk_dos_puntos NEWLINE BLOCK
+# Lista de parámetros para funciones
+ELEMENTS -> ELEMENT ELEMENT_LIST | ε
+ELEMENT -> id | tk_string | tk_entero | True | False | None
+ELEMENT_LIST -> tk_coma ELEMENT ELEMENT_LIST | ε
+
+#------------------------------------------------------------------------------------------------------------------
 
 # Declaracion de bucles
-FOR_STMT -> for id in RANGE_EXPR tk_dos_puntos NEWLINE BLOCK_LOOP
-WHILE_STMT -> while EXPRESSION tk_dos_puntos NEWLINE BLOCK_LOOP
+FOR_STMT -> for id in ITERABLE_EXPR tk_dos_puntos NEWLINE BLOCK
+WHILE_STMT -> while EXPRESSION tk_dos_puntos NEWLINE BLOCK
 
-# Expresión de rango
+#------------------------------------------------------------------------------------------------------------------
+#Condicionales
+IF_STMT -> if EXPRESSION tk_dos_puntos NEWLINE BLOCK ELIF_STMT ELSE_STMT
+ELIF_STMT -> elif EXPRESSION tk_dos_puntos NEWLINE BLOCK | ε
+ELSE_STMT -> else tk_dos_puntos NEWLINE BLOCK | ε
+
+#------------------------------------------------------------------------------------------------------------------
+# Bloques de código
+BLOCK -> tk_indent STATEMENT_LIST tk_dedent
+#------------------------------------------------------------------------------------------------------------------
+#Iterables
+ITERABLE_EXPR -> LIST_EXPR | TUPLE_EXPR | RANGE_EXPR
+LIST_EXPR -> tk_corchete_izq ELEMENTS tk_corchete_der
+TUPLE_EXPR -> tk_par_izq ELEMENTS tk_par_der
 RANGE_EXPR -> range tk_par_izq EXPRESSION tk_par_der
 
-# Lista de parámetros para funciones
-PARAMETERS -> PARAMETER PARAMETER_LIST | ε
-PARAMETER -> id | tk_string
-PARAMETER_LIST -> tk_coma PARAMETER PARAMETER_LIST | ε
-
-# Bloques de código para funciones que permiten `return` al final
-BLOCK_DEF -> tk_indent STATEMENT_LIST RETURN_STMT tk_dedent
-BLOCK_LOOP -> tk_indent STATEMENT_LIST LOOP_END tk_dedent
-
+#------------------------------------------------------------------------------------------------------------------
 # Expresiones y operadores
-EXPRESSION -> TERM EXPRESSION_PRIME
-EXPRESSION_PRIME -> ADD_OP TERM EXPRESSION_PRIME | ε
+EXPRESSION -> ELEMENT EXPRESSION_PRIME
+EXPRESSION_PRIME -> OP_STMT ELEMENT EXPRESSION_PRIME | ε
 
-# Operadores de términos
-TERM -> FACTOR TERM_PRIME
-TERM_PRIME -> MUL_OP FACTOR TERM_PRIME | ε
 
-# Factores y literales
-FACTOR -> id | tk_par_izq EXPRESSION tk_par_der | LITERAL | RANGE_EXPR
-LITERAL -> tk_entero | tk_string | True | False | None
-
+#------------------------------------------------------------------------------------------------------------------
 # Operadores aritméticos y lógicos
-ADD_OP -> tk_suma | tk_resta | tk_or | tk_xor_bit | tk_shift_izq | tk_shift_der
-MUL_OP -> tk_multiplicacion | tk_division | tk_modulo | tk_floor_div | tk_exponente | tk_and_bit
-REL_OP -> tk_igual | tk_distinto | tk_menor | tk_mayor | tk_menor_igual | tk_mayor_igual
-
-# Operadores de asignación
-ASSIGNMENT_OP -> tk_asig | tk_suma_asig | tk_resta_asig | tk_mult_asig | tk_div_asig 
-               | tk_mod_asig | tk_and_asig | tk_or_asig | tk_xor_asig | tk_izq_asig 
-               | tk_der_asig | tk_exp_asig | tk_floor_div_asig | tk_morsa
+OP_STMT -> ARITHMETIC_OP | LOG_OP | ASSIGNMENT_OP | BIT_OP | BITWISE_ASSIGNMENT_OP
+ARITHMETIC_OP -> tk_suma | tk_resta | tk_multiplicacion | tk_division | tk_modulo | tk_exponente | tk_floor_div
+LOG_OP -> tk_and| tk_or | tk_not | tk_igual | tk_distinto | tk_menor | tk_mayor | tk_menor_igual | tk_mayor_igual
+BITWISE_OP -> tk_and_bit | tk_or_bit | tk_xor_bit | tk_complemento | tk_shift_izq | tk_shift_der
+ASSIGNMENT_OP -> tk_asig | tk_suma_asig | tk_resta_asig | tk_mult_asig | tk_div_asig | tk_mod_asig 
+               | tk_exp_asig | tk_floor_div_asig | tk_morsa
+BITWISE_ASSIGNMENT_OP -> tk_and_asig | tk_or_asig | tk_xor_asig | tk_izq_asig | tk_der_asig
+SPECIAL_OP -> tk_flecha_funcion | tk_arr

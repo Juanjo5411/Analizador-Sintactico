@@ -3,8 +3,6 @@ PROGRAM -> STATEMENT_LIST
 STATEMENT_LIST -> STATEMENT STATEMENT_LIST_PRIME
 STATEMENT_LIST_PRIME -> NEWLINE STATEMENT_LIST | ε
 NEWLINE -> tk_newline
-INDENT_STMT -> tk_indent
-DEDENT_STMT -> tk_dedent
 #------------------------------------------------------------------------------------------------------------------
 
 # Declaraciones, asignaciones y print
@@ -15,7 +13,7 @@ PRINT_STMT -> print tk_par_izq EXPRESSION tk_par_der
 #------------------------------------------------------------------------------------------------------------------
 # Palabras reservadas de flujo de control
 PASS_STMT -> pass
-RETURN_STMT -> return EXPRESSION NEWLINE
+RETURN_STMT -> return EXPRESSION
 LOOP_END -> BREAK_STMT | CONTINUE_STMT
 BREAK_STMT -> break NEWLINE
 CONTINUE_STMT -> continue NEWLINE
@@ -26,7 +24,7 @@ CONTINUE_STMT -> continue NEWLINE
 FUNCTION_DEF -> def id tk_par_izq ELEMENTS tk_par_der tk_dos_puntos NEWLINE BLOCK
 # Lista de parámetros para funciones
 ELEMENTS -> ELEMENT ELEMENT_LIST | ε
-ELEMENT -> id | tk_string | tk_entero | True | False | None
+ELEMENT -> id | tk_string | tk_entero | True | False | None | ITERABLE_EXPR
 ELEMENT_LIST -> tk_coma ELEMENT ELEMENT_LIST | ε
 
 #------------------------------------------------------------------------------------------------------------------
@@ -46,11 +44,14 @@ ELSE_STMT -> else tk_dos_puntos NEWLINE BLOCK | ε
 BLOCK -> tk_indent STATEMENT_LIST tk_dedent
 #------------------------------------------------------------------------------------------------------------------
 #Iterables
-ITERABLE_EXPR -> LIST_EXPR | TUPLE_EXPR | RANGE_EXPR
+ITERABLE_EXPR -> LIST_EXPR | TUPLE_EXPR | RANGE_EXPR | DICT_EXPR
 LIST_EXPR -> tk_corchete_izq ELEMENTS tk_corchete_der
 TUPLE_EXPR -> tk_par_izq ELEMENTS tk_par_der
 RANGE_EXPR -> range tk_par_izq EXPRESSION tk_par_der
-
+DICT_EXPR -> tk_llave_izq PAIR_LIST tk_llave_der
+PAIR_LIST -> PAIR PAIR_LIST_PRIME | ε
+PAIR_LIST_PRIME -> tk_coma PAIR PAIR_LIST_PRIME | ε
+PAIR -> ELEMENT tk_dos_puntos ELEMENT
 #------------------------------------------------------------------------------------------------------------------
 # Expresiones y operadores
 EXPRESSION -> ELEMENT EXPRESSION_PRIME
